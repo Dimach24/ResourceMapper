@@ -97,7 +97,7 @@ classdef ResourceMapper<handle
             % nu parameter for shift of DM-RS
             nu=mod(NCellId,4);
             % pre-mapping staff
-            pbch=ResourceMapper.preparePbch(pbch);
+            pbch=obj.preparePbch(pbch);
             
             %throwing out dmrs indexes
             indexes=find(mod(1:1:240,4)~=(nu+1));
@@ -131,7 +131,7 @@ classdef ResourceMapper<handle
             % nu parameter for shift of DM-RS
             nu=mod(NCellId,4);
             % pre-mapping staff
-            pbchDmRs=ResourceMapper.preparePbchDmRs(pbchDmRs);
+            pbchDmRs=obj.preparePbchDmRs(pbchDmRs);
             % first 60 PBCH DM-RS
             dmrs=pbchDmRs(1:60);
             
