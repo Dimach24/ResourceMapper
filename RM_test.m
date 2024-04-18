@@ -10,14 +10,7 @@ ss=SsGenerator();
 r=ResourceMapper();
 r.createResourceGrid(mu,frameCount);
 
+r.addSsBlockToResourceGrid(ID,pss,sss,ones(1,432)*20,ones(1,144),5,0);
 
-r.addPbchDmRsToResourceGrid(ID,ones(frameCount*2^mu*10,144)*40);
-r.addPbchToResourceGrid(ID,ones(frameCount*2^mu*10,432)*20);
-r.addPssToResourceGrid(pss);
-r.addSssToResourceGrid(sss);
 h=heatmap(abs(r.resourceGrid(:,1:50)));
 grid off
-labels=string(1:240);
-labels(mod(1:240,25)~=0)='';
-h.YDisplayLabels=labels;
-h.YDisplayData=flipud(h.YDisplayData);
