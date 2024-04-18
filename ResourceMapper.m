@@ -46,7 +46,22 @@ classdef ResourceMapper<handle
         %%% ===============================================================
       
 
-
+        function addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset)
+            arguments
+                obj ResourceMapper
+                nCellId int32
+                pssSignal
+                sssSignal
+                pbch
+                pbchDmRs
+                t_offset=0
+                f_offset=0
+            end
+            obj.addPssToResourceGrid(pssSignal,t_offset,f_offset);
+            obj.addSssToResourceGrid(sssSignal,t_offset+2,f_offset);
+            obj.addPbchDmRsToResourceGrid(nCellId,pbchDmRs,t_offset+1,f_offset);
+            obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset)
+        end
 
         % SS MAPPING
         function addPssToResourceGrid(obj,PssSignal,t_offset,f_offset)
@@ -57,7 +72,7 @@ classdef ResourceMapper<handle
                 t_offset (1,1) = 0 %optional
                 f_offset (1,1) = 0 %optional
             end
-                obj.resourceGrid(57:183+f_offset,1+t_offset) = fft(PssSignal.').';
+                obj.resourceGrid((57:183)+f_offset,1+t_offset) = fft(PssSignal.').';
         end
         
         function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset)
@@ -68,10 +83,9 @@ classdef ResourceMapper<handle
                 t_offset (1,1) = 0 %optional
                 f_offset (1,1) = 0 %optional
             end
-            obj.resourceGrid(57:183+f_offset,1+t_offset) = fft(SssSignal.').';
+            obj.resourceGrid((57:183)+f_offset,1+t_offset) = fft(SssSignal.').';
         end
         
-
         function addPbchToResourceGrid(obj,NCellId,pbch,t_offset,f_offset)
             arguments
                 obj
@@ -98,7 +112,6 @@ classdef ResourceMapper<handle
             obj.resourceGrid(indexes+f_offset,2+t_offset)=pbch(181:181+71);
         end
 
-
         %PBCH DM-RS MAPPING
         function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,t_offset,f_offset)
             arguments
@@ -109,7 +122,7 @@ classdef ResourceMapper<handle
                 f_offset = 0
             end
             % nu parameter for shift of DM-RS
-            nu=mod(NCellId,4);
+            nu=cast(mod(NCellId,4),"double");
             % pre-mapping staff
             pbchDmRs=obj.preparePbchDmRs(pbchDmRs);
             % first 60 PBCH DM-RS
