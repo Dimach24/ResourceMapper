@@ -45,35 +45,40 @@ classdef ResourceMapper<handle
         
         %%% ===============================================================
       
-        
+
+
+
         % SS MAPPING
-        function addPssToResourceGrid(obj,PssSignal,offset)
+        function addPssToResourceGrid(obj,PssSignal,t_offset,f_offset)
         %adds PSS to resource matrix
             arguments
                 obj 
                 PssSignal (1,127)
-                offset (1,1) = 2 %optional
+                t_offset (1,1) = 0 %optional
+                f_offset (1,1) = 0 %optional
             end
-                obj.resourceGrid(57:183,1+offset) = fft(PssSignal.').';
+                obj.resourceGrid(57:183+f_offset,1+t_offset) = fft(PssSignal.').';
         end
         
-        function  addSssToResourceGrid(obj, SssSignal,offset)
+        function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset)
         %adds SSS to resource matrix
             arguments
                 obj
                 SssSignal (1,127)
-                offset (1,1) = 4 %optional
+                t_offset (1,1) = 0 %optional
+                f_offset (1,1) = 0 %optional
             end
-            obj.resourceGrid(57:183,1+offset) = fft(SssSignal.').';
+            obj.resourceGrid(57:183+f_offset,1+t_offset) = fft(SssSignal.').';
         end
         
 
-        function addPbchToResourceGrid(obj,NCellId,pbch,offset)
+        function addPbchToResourceGrid(obj,NCellId,pbch,t_offset,f_offset)
             arguments
                 obj
                 NCellId
                 pbch
-                offset =0
+                t_offset = 0
+                f_offset = 0
             end
 
             % nu parameter for shift of DM-RS
@@ -85,22 +90,23 @@ classdef ResourceMapper<handle
             indexes=find(mod(1:1:240,4)~=(nu+1));
 
             % mapping first 180 PBCH
-            obj.resourceGrid(indexes,1+offset)=pbch(1:180);
+            obj.resourceGrid(indexes+f_offset,1+t_offset)=pbch(1:180);
             % mapping last 180
-            obj.resourceGrid(indexes,3+offset)=pbch(end-179:end);
+            obj.resourceGrid(indexes+f_offset,3+t_offset)=pbch(end-179:end);
             % mapping arround SSS
             indexes=indexes(indexes<49 | indexes>192);
-            obj.resourceGrid(indexes,2+offset)=pbch(181:181+71);
+            obj.resourceGrid(indexes+f_offset,2+t_offset)=pbch(181:181+71);
         end
 
 
         %PBCH DM-RS MAPPING
-        function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,offset)
+        function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,t_offset,f_offset)
             arguments
                 obj
                 NCellId
                 pbchDmRs
-                offset =0
+                t_offset = 0
+                f_offset = 0
             end
             % nu parameter for shift of DM-RS
             nu=mod(NCellId,4);
@@ -112,20 +118,20 @@ classdef ResourceMapper<handle
             % indexes array
             indexes=find(mod(1:1:240,4)==1);
             % mapping 1st part
-            obj.resourceGrid(indexes+nu,1+offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,1+t_offset)=dmrs;
             % d---d---d---d … d---d---
             
             % last dm-rs block
             dmrs=pbchDmRs(end-59:end);
             % mapping 2nd part
-            obj.resourceGrid(indexes+nu,3+offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,3+t_offset)=dmrs;
             % d---d---d---d … d---d---
 
             % next dm-rs block (24 elements are splitted into two blocks)
             dmrs=pbchDmRs(62:62+23);
             indexes=indexes(indexes<46 | indexes>192); % throwing SSS area
             % mapping 3rd part
-            obj.resourceGrid(indexes+nu,2+offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=dmrs;
             % d---d---d--…-SSS-…-d---d--d
         end
     end
