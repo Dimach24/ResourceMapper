@@ -1,7 +1,7 @@
 #####     TODO LIST     #####
 
 	* resource grid size (according to scs, e.t.c.) 
-	* fix fft in pss & sss (?)
+	* case b/c 30/60 kHz
 	* pbch generator - mapper interface (pbchgen buisness)
 
 #### LONG-TIME FEATURES #####
