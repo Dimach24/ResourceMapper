@@ -1,9 +1,7 @@
 #####     TODO LIST     #####
 
 	* resource grid size (according to scs, e.t.c.) 
-	* ss block placer (according to 'cases' in TS 38.213 §4.1)
 	* fix fft in pss & sss (?)
-	* look for freq. offset in TS xx.xxx
 	* pbch generator - mapper interface (pbchgen buisness)
 
 #### LONG-TIME FEATURES #####
