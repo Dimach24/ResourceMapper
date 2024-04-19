@@ -10,7 +10,7 @@ ss=SsGenerator();
 r=ResourceMapper();
 r.createResourceGrid(mu,frameCount);
 
-r.addSsBlockToResourceGrid(ID,pss,sss,ones(1,432)*20,ones(1,144),5,0);
+r.addSsBlockByCase('A',[0,1],ID,pss,sss,ones(100,432)*20,ones(100,144),0,0);
 
 h=heatmap(abs(r.resourceGrid(:,1:50)));
 grid off
