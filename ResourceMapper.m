@@ -44,7 +44,53 @@ classdef ResourceMapper<handle
         end
         
         %%% ===============================================================
-      
+        function addSsBlockByCase(obj,fcase,n,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset)
+            arguments
+                obj ResourceMapper
+                fcase char
+                n
+                nCellId
+                pssSignal (1,127)
+                sssSignal (1,127)
+                pbch
+                pbchDmRs
+                t_offset (1,1)
+                f_offset (1,1)
+            end
+            switch fcase
+                case 'A'
+                    shifts=reshape([2 8]+14*n.',1,[]);
+                case 'B'
+                    shifts=reshape([4 8 16 20]+28*n.',1,[]);
+                case 'C'
+                    shifts=reshape([2,8]+14*n.',1,[]);
+                case 'D'
+                    shifts=reshape([8,12,16,20]+28*n.',1,[]);
+                case 'E'
+                    shifts=reshape([(8:4:20),(32:4:44)]+56*n.',1,[]);
+                case 'F'
+                    shifts=reshape([2,9]+14*n.',1,[]);
+                case 'G'
+                    shifts=reshape([2,9]+14*n.',1,[]);
+                otherwise
+                    throw(MException('caseErroe',"Case must be uppercase leeter A...G"));
+            end
+            shifts=sort(shifts); % indexing from 1
+            indexInData=1;
+            %for each half-frame
+            halfShifts=0:(2*obj.frameCount-1);
+            if obj.isCycledPrefixExtended
+                halfShifts=halfShifts*240;
+            else
+                halfShifts=halfShifts*2^obj.mu*70;
+            end
+            for halfFrameShift=halfShifts
+                for shift=shifts+halfFrameShift
+                    addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch(indexInData,:),pbchDmRs(indexInData,:),t_offset+shift,f_offset)
+                    indexInData=indexInData+1;
+                end
+            end
+        end
 
         function addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset)
             arguments
@@ -59,8 +105,8 @@ classdef ResourceMapper<handle
             end
             obj.addPssToResourceGrid(pssSignal,t_offset,f_offset);
             obj.addSssToResourceGrid(sssSignal,t_offset+2,f_offset);
+            obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset);
             obj.addPbchDmRsToResourceGrid(nCellId,pbchDmRs,t_offset+1,f_offset);
-            obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset)
         end
 
         % SS MAPPING
