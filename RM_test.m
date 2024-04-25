@@ -2,15 +2,15 @@ clc;
 clear all; %#ok<CLALL>
 close all;
 %%
-frameCount = 1;
+frameCount = 6;
 ID=4; %ncell_ID
-mu = 0;
+mu = 4;
 ss=SsGenerator();
 [pss,sss]=ss.getSsSignalsByCellInfo(ID);
 r=ResourceMapper();
 r.createResourceGrid(mu,frameCount);
 
-r.addSsBlockByCase('A',[0,1],ID,pss,sss,ones(100,432)*20,ones(100,144),0,0);
+r.addSsBlockByCase('G',0:8,ID,pss,sss,ones(5*500,432)*20,ones(5*500,144)*40,0,0);
 
-h=heatmap(abs(r.resourceGrid(:,1:50)));
+h=heatmap(abs(r.resourceGrid(:,100:end)));
 grid off

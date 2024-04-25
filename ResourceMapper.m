@@ -73,7 +73,7 @@ classdef ResourceMapper<handle
                 case 'G'
                     shifts=reshape([2,9]+14*n.',1,[]);
                 otherwise
-                    throw(MException('caseErroe',"Case must be uppercase leeter A...G"));
+                    throw(MException("Freq. Case Error","Case must be uppercase leeter A...G"));
             end
             shifts=sort(shifts); % indexing from 1
             indexInData=1;
@@ -85,7 +85,7 @@ classdef ResourceMapper<handle
                 halfShifts=halfShifts*2^obj.mu*70;
             end
             for halfFrameShift=halfShifts
-                for shift=shifts+halfFrameShift
+                for shift=(shifts+halfFrameShift)
                     addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch(indexInData,:),pbchDmRs(indexInData,:),t_offset+shift,f_offset)
                     indexInData=indexInData+1;
                 end
