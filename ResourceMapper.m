@@ -44,7 +44,7 @@ classdef ResourceMapper<handle
         end
         
         %%% ===============================================================
-        function addSsBlockByCase(obj,fcase,n,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset)
+        function addSsBlockByCase(obj,fcase,n,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset,beta)
             arguments
                 obj ResourceMapper
                 fcase char
@@ -56,6 +56,7 @@ classdef ResourceMapper<handle
                 pbchDmRs
                 t_offset (1,1)
                 f_offset (1,1)
+                beta (1,4) = [1 1 1 1] %power allocation scaling factor
             end
             switch fcase
                 case 'A'
@@ -86,13 +87,13 @@ classdef ResourceMapper<handle
             end
             for halfFrameShift=halfShifts
                 for shift=(shifts+halfFrameShift)
-                    addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch(indexInData,:),pbchDmRs(indexInData,:),t_offset+shift,f_offset)
+                    addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch(indexInData,:),pbchDmRs(indexInData,:),t_offset+shift,f_offset,beta)
                     indexInData=indexInData+1;
                 end
             end
         end
 
-        function addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset)
+        function addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset,beta)
             arguments
                 obj ResourceMapper
                 nCellId int32
@@ -102,43 +103,47 @@ classdef ResourceMapper<handle
                 pbchDmRs
                 t_offset=0
                 f_offset=0
+                beta (1,4) = [1 1 1 1] %power allocation scaling factor
             end
-            obj.addPssToResourceGrid(pssSignal,t_offset,f_offset);
-            obj.addSssToResourceGrid(sssSignal,t_offset+2,f_offset);
-            obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset);
-            obj.addPbchDmRsToResourceGrid(nCellId,pbchDmRs,t_offset+1,f_offset);
+            obj.addPssToResourceGrid(pssSignal,t_offset,f_offset,beta(1));
+            obj.addSssToResourceGrid(sssSignal,t_offset+2,f_offset,beta(2));
+            obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset,beta(3));
+            obj.addPbchDmRsToResourceGrid(nCellId,pbchDmRs,t_offset+1,f_offset,beta(4));
         end
 
         % SS MAPPING
-        function addPssToResourceGrid(obj,PssSignal,t_offset,f_offset)
+        function addPssToResourceGrid(obj,PssSignal,t_offset,f_offset,beta_pss)
         %adds PSS to resource matrix
             arguments
                 obj 
                 PssSignal (1,127)
                 t_offset (1,1) = 0 %optional
                 f_offset (1,1) = 0 %optional
+                beta_pss (1,1) = 1 %power allocation factor
             end
-                obj.resourceGrid((57:183)+f_offset,1+t_offset) = fft(PssSignal.').';
+                obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta_pss .* fft(PssSignal.').';
         end
         
-        function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset)
+        function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset,beta_sss)
         %adds SSS to resource matrix
             arguments
                 obj
                 SssSignal (1,127)
                 t_offset (1,1) = 0 %optional
                 f_offset (1,1) = 0 %optional
+                beta_sss (1,1) = 1 %power allocation factor
             end
-            obj.resourceGrid((57:183)+f_offset,1+t_offset) = fft(SssSignal.').';
+            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta_sss .* fft(SssSignal.').';
         end
         
-        function addPbchToResourceGrid(obj,NCellId,pbch,t_offset,f_offset)
+        function addPbchToResourceGrid(obj,NCellId,pbch,t_offset,f_offset,beta_pbch)
             arguments
                 obj
                 NCellId
                 pbch
                 t_offset = 0
                 f_offset = 0
+                beta_pbch (1,1) = 1 %power allocation factor
             end
 
             % nu parameter for shift of DM-RS
@@ -150,22 +155,23 @@ classdef ResourceMapper<handle
             indexes=find(mod(1:1:240,4)~=(nu+1));
 
             % mapping first 180 PBCH
-            obj.resourceGrid(indexes+f_offset,1+t_offset)=pbch(1:180);
+            obj.resourceGrid(indexes+f_offset,1+t_offset)=beta_pbch .* pbch(1:180);
             % mapping last 180
-            obj.resourceGrid(indexes+f_offset,3+t_offset)=pbch(end-179:end);
+            obj.resourceGrid(indexes+f_offset,3+t_offset)=beta_pbch .* pbch(end-179:end);
             % mapping arround SSS
             indexes=indexes(indexes<49 | indexes>192);
-            obj.resourceGrid(indexes+f_offset,2+t_offset)=pbch(181:181+71);
+            obj.resourceGrid(indexes+f_offset,2+t_offset)=beta_pbch .* pbch(181:181+71);
         end
 
         %PBCH DM-RS MAPPING
-        function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,t_offset,f_offset)
+        function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,t_offset,f_offset,beta_pbchDmRs)
             arguments
                 obj
                 NCellId
                 pbchDmRs
                 t_offset = 0
                 f_offset = 0
+                beta_pbchDmRs(1,1) = 1 %power allocation factor 
             end
             % nu parameter for shift of DM-RS
             nu=cast(mod(NCellId,4),"double");
@@ -177,20 +183,20 @@ classdef ResourceMapper<handle
             % indexes array
             indexes=find(mod(1:1:240,4)==1);
             % mapping 1st part
-            obj.resourceGrid(indexes+nu+f_offset,1+t_offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,1+t_offset)=beta_pbchDmRs .* dmrs;
             % d---d---d---d … d---d---
             
             % last dm-rs block
             dmrs=pbchDmRs(end-59:end);
             % mapping 2nd part
-            obj.resourceGrid(indexes+nu+f_offset,3+t_offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,3+t_offset)=beta_pbchDmRs .* dmrs;
             % d---d---d---d … d---d---
 
             % next dm-rs block (24 elements are splitted into two blocks)
             dmrs=pbchDmRs(62:62+23);
             indexes=indexes(indexes<46 | indexes>192); % throwing SSS area
             % mapping 3rd part
-            obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=dmrs;
+            obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=beta_pbchDmRs .* dmrs;
             % d---d---d--…-SSS-…-d---d--d
         end
     end
