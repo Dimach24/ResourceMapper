@@ -13,11 +13,11 @@ classdef ResourceMapper<handle
 
     methods
         
-        function pbchDmRs=preparePbchDmRs(obj,pbchDmRs) %#ok<INUSD>
+        function pbchDmRs=preparePbchDmRs(~,pbchDmRs) 
             % pre-mapping staff
             pbchDmRs=pbchDmRs+0; %todo
         end
-        function pbch=preparePbch(obj,pbch) %#ok<INUSD>
+        function pbch=preparePbch(~,pbch) 
              % pre-mapping staff
             pbch=pbch+0; %todo
         end
