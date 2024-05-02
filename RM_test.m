@@ -5,8 +5,7 @@ close all;
 frameCount = 6;
 ID=4; %ncell_ID
 mu = 4;
-ss=SsGenerator();
-[pss,sss]=ss.getSsSignalsByCellInfo(ID);
+[pss,sss]=SsGenerator.getSsSignalsByCellInfo(ID);
 r=ResourceMapper();
 r.createResourceGrid(mu,frameCount);
 
