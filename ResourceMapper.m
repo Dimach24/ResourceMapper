@@ -1,3 +1,4 @@
+
 classdef ResourceMapper<handle
 
     properties
@@ -22,7 +23,7 @@ classdef ResourceMapper<handle
             pbch=pbch+0; %todo
         end
             
-        function obj=createResourceGrid(obj,mu,frameCount,isCycledPrefixExtended)
+        function obj=createResourceGrid(obj,mu,frameCount,isCycledPrefixExtended,scs,tran_bandwidth)
             % createResourceGrid
             % creates empty Resource grid for this 
             % configuration [38.211, 4.3.2] or wipes 
@@ -35,13 +36,19 @@ classdef ResourceMapper<handle
                 % amounts of empty frames to create
                 isCycledPrefixExtended  (1,1) =false
                 % extended cycled prefix
+                scs (1,1) = 30
+                % subcarrier spacing, kHz must be 15, 30 or 60
+                tran_bandwidth (1,1)= 60
+                % transmission bandwidth, MHz see [38.101-1: Table 5.3.2-1]
             end
-
+            R_GRID_CONSTANTS;
+            NRB=MaximumTransmissionBandwidthConfiguration(scs);
+            NRB=NRB(tran_bandwidth);
             if(isCycledPrefixExtended) % ONLY FOR MU==2
                 %   12 sym per slot, 10*4 slot per frame = 480 symb per frame
-                obj.resourceGrid=zeros(4,480*frameCount); % FIXME 
+                obj.resourceGrid=zeros(12*NRB,480*frameCount); % FIXME 
             else
-                obj.resourceGrid=zeros(240,2^mu*140*frameCount);% FIXME
+                obj.resourceGrid=zeros(12*NRB,2^mu*140*frameCount);% FIXME
             end
             % initializing
             obj.mu=mu;
