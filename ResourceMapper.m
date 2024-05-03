@@ -21,12 +21,7 @@ classdef ResourceMapper<handle
              % pre-mapping staff
             pbch=pbch+0; %todo
         end
-    
-        function obj = ResourceMapper()
-            % empty constructor;
-        end
-
-        
+            
         function obj=createResourceGrid(obj,mu,frameCount,isCycledPrefixExtended)
             % createResourceGrid
             % creates empty Resource grid for this 
