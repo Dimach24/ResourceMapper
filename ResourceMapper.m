@@ -17,7 +17,6 @@ classdef ResourceMapper<handle
                 mu, ...
                 frameCount, ...
                 isCycledPrefixExtended, ...
-                scs, ...
                 tran_bandwidth)
             % createResourceGrid
             % creates empty Resource grid for this
@@ -31,13 +30,14 @@ classdef ResourceMapper<handle
                 % amounts of empty frames to create
                 isCycledPrefixExtended  (1,1) = false
                 % extended cycled prefix
-                scs (1,1) = 30
-                % subcarrier spacing, kHz must be 15, 30 or 60
                 tran_bandwidth (1,1)= 60
                 % transmission bandwidth, MHz see [38.101-1: Table 5.3.2-1]
             end
             R_GRID_CONSTANTS;
-            
+
+            scs = 2^mu*15;
+            % subcarrier spacing, kHz must be 15, 30 or 60
+
             NRB_tran_band_seq=MaximumTransmissionBandwidthConfiguration(scs);
             NRB=NRB_tran_band_seq(tran_bandwidth);
             if(isCycledPrefixExtended) % ONLY FOR MU==2
