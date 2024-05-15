@@ -1,6 +1,7 @@
 clc;
 clear all; %#ok<CLALL>
 close all;
+addpath(genpath(pwd));
 %%
 frameCount = 6;
 ID=4; %ncell_ID

@@ -1,40 +1,44 @@
 
 classdef ResourceMapper<handle
-
+    
     properties
-        resourceGrid    
+        resourceGrid
         % main grid
-        mu              
+        mu
         % subcarrier spacing cofiguration (Δf=2^mu*15 [kHz])
-        frameCount      
+        frameCount
         % amount of frames in resourceGrid
-        isCycledPrefixExtended  
+        isCycledPrefixExtended
         % cycled prefix flag
     end
-
+    
     methods
-        
-        function pbchDmRs=preparePbchDmRs(~,pbchDmRs) 
+        function pbchDmRs=preparePbchDmRs(~,pbchDmRs)
             % pre-mapping staff
-            pbchDmRs=pbchDmRs+0; %todo
+            pbchDmRs=pbchDmRs+0;
         end
-        function pbch=preparePbch(~,pbch) 
-             % pre-mapping staff
-            pbch=pbch+0; %todo
+        function pbch=preparePbch(~,pbch)
+            % pre-mapping staff
+            pbch=pbch+0;
         end
-            
-        function obj=createResourceGrid(obj,mu,frameCount,isCycledPrefixExtended,scs,tran_bandwidth)
+        
+        function obj=createResourceGrid(obj, ...
+                mu, ...
+                frameCount, ...
+                isCycledPrefixExtended, ...
+                scs, ...
+                tran_bandwidth)
             % createResourceGrid
-            % creates empty Resource grid for this 
-            % configuration [38.211, 4.3.2] or wipes 
-            % all data in the grid 
+            % creates empty Resource grid for this
+            % configuration [38.211, 4.3.2] or wipes
+            % all data in the grid
             arguments
-                obj     ResourceMapper
+                obj                     ResourceMapper
                 mu                      (1,1)
                 % subcarrier spacing cofiguration (Δf=2^mu*15 [kHz])
                 frameCount              (1,1)
                 % amounts of empty frames to create
-                isCycledPrefixExtended  (1,1) =false
+                isCycledPrefixExtended  (1,1) = false
                 % extended cycled prefix
                 scs (1,1) = 30
                 % subcarrier spacing, kHz must be 15, 30 or 60
@@ -42,11 +46,12 @@ classdef ResourceMapper<handle
                 % transmission bandwidth, MHz see [38.101-1: Table 5.3.2-1]
             end
             R_GRID_CONSTANTS;
-            NRB=MaximumTransmissionBandwidthConfiguration(scs);
-            NRB=NRB(tran_bandwidth);
+            
+            NRB_tran_band_seq=MaximumTransmissionBandwidthConfiguration(scs);
+            NRB=NRB_tran_band_seq(tran_bandwidth);
             if(isCycledPrefixExtended) % ONLY FOR MU==2
                 %   12 sym per slot, 10*4 slot per frame = 480 symb per frame
-                obj.resourceGrid=zeros(12*NRB,480*frameCount); % FIXME 
+                obj.resourceGrid=zeros(12*NRB,480*frameCount); % FIXME
             else
                 obj.resourceGrid=zeros(12*NRB,2^mu*140*frameCount);% FIXME
             end
@@ -62,7 +67,7 @@ classdef ResourceMapper<handle
             % places signals according to  [38.213, 4.1]
             arguments
                 obj ResourceMapper
-                fcase char 
+                fcase char
                 % freq. config case, see [38.213, 4.1]
                 n
                 % array of shifts for this case, see [38.213, 4.1]
@@ -80,7 +85,7 @@ classdef ResourceMapper<handle
                 % time domain offset
                 f_offset (1,1)
                 % freq. domain offset
-                beta (1,4) = [1 1 1 1] 
+                beta (1,4) = [1 1 1 1]
                 % power allocation scaling factor
             end
             switch fcase
@@ -117,7 +122,7 @@ classdef ResourceMapper<handle
                 end
             end
         end
-
+        
         function addSsBlockToResourceGrid(obj,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset,beta)
             % addSsBlockToResourceGrid
             % places signals according to configuration [38.211, 7.4.3.1-1]
@@ -137,7 +142,7 @@ classdef ResourceMapper<handle
                 % time domain offset
                 f_offset=0
                 % freq. domain offset
-                beta (1,4) = [1 1 1 1] 
+                beta (1,4) = [1 1 1 1]
                 % power allocation scaling factor
             end
             obj.addPssToResourceGrid(pssSignal,t_offset,f_offset,beta(1));
@@ -145,35 +150,35 @@ classdef ResourceMapper<handle
             obj.addPbchToResourceGrid(nCellId,pbch,t_offset+1,f_offset,beta(3));
             obj.addPbchDmRsToResourceGrid(nCellId,pbchDmRs,t_offset+1,f_offset,beta(4));
         end
-
+        
         % SS MAPPING
         function addPssToResourceGrid(obj,PssSignal,t_offset,f_offset,beta)
-        % adds PSS to resource matrix
+            % adds PSS to resource matrix
             arguments
-                obj 
+                obj
                 PssSignal (1,127)
                 % primary sync. signal [38.211, 7.4.2.2]
-                t_offset (1,1) = 0 
+                t_offset (1,1) = 0
                 % time domain offset
-                f_offset (1,1) = 0 
+                f_offset (1,1) = 0
                 % freq. domain offset
-                beta (1,1) = 1 
+                beta (1,1) = 1
                 % power allocation factor
             end
-                obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* fft(PssSignal.').';
+            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* fft(PssSignal.').';
         end
         
         function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset,beta)
-        % adds SSS to resource matrix
+            % adds SSS to resource matrix
             arguments
                 obj
                 SssSignal (1,127)
                 % secondary sync. signal [38.211, 7.4.2.3]
-                t_offset (1,1) = 0 
+                t_offset (1,1) = 0
                 % time domain offset
-                f_offset (1,1) = 0 
+                f_offset (1,1) = 0
                 % freq. domain offset
-                beta (1,1) = 1 
+                beta (1,1) = 1
                 % power allocation factor
             end
             obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* fft(SssSignal.').';
@@ -190,10 +195,10 @@ classdef ResourceMapper<handle
                 % time domain offset
                 f_offset = 0
                 % freq. domain offset
-                beta (1,1) = 1 
+                beta (1,1) = 1
                 % power allocation factor
             end
-
+            
             % nu parameter for shift of DM-RS
             nu=mod(NCellId,4);
             % pre-mapping staff
@@ -201,7 +206,7 @@ classdef ResourceMapper<handle
             
             %throwing out dmrs indexes
             indexes=find(mod(1:1:240,4)~=(nu+1));
-
+            
             % mapping first 180 PBCH
             obj.resourceGrid(indexes+f_offset,1+t_offset)=beta .* pbch(1:180);
             % mapping last 180
@@ -210,7 +215,7 @@ classdef ResourceMapper<handle
             indexes=indexes(indexes<49 | indexes>192);
             obj.resourceGrid(indexes+f_offset,2+t_offset)=beta .* pbch(181:181+71);
         end
-
+        
         % PBCH DM-RS MAPPING
         function addPbchDmRsToResourceGrid(obj,NCellId,pbchDmRs,t_offset,f_offset,beta)
             arguments
@@ -223,8 +228,8 @@ classdef ResourceMapper<handle
                 % time domain offset
                 f_offset = 0
                 % freq. domain offset
-                beta(1,1) = 1 
-                % power allocation factor 
+                beta(1,1) = 1
+                % power allocation factor
             end
             % nu parameter for shift of DM-RS
             nu=cast(mod(NCellId,4),"double");
@@ -244,7 +249,7 @@ classdef ResourceMapper<handle
             % mapping 2nd part
             obj.resourceGrid(indexes+nu+f_offset,3+t_offset)=beta .* dmrs;
             % d---d---d---d … d---d---
-
+            
             % next dm-rs block (24 elements are splitted into two blocks)
             dmrs=pbchDmRs(62:62+23);
             indexes=indexes(indexes<46 | indexes>192); % throwing SSS area
