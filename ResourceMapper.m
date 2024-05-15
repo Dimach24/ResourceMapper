@@ -1,4 +1,3 @@
-
 classdef ResourceMapper<handle
     
     properties
@@ -13,14 +12,6 @@ classdef ResourceMapper<handle
     end
     
     methods
-        function pbchDmRs=preparePbchDmRs(~,pbchDmRs)
-            % pre-mapping staff
-            pbchDmRs=pbchDmRs+0;
-        end
-        function pbch=preparePbch(~,pbch)
-            % pre-mapping staff
-            pbch=pbch+0;
-        end
         
         function obj=createResourceGrid(obj, ...
                 mu, ...
@@ -201,8 +192,6 @@ classdef ResourceMapper<handle
             
             % nu parameter for shift of DM-RS
             nu=mod(NCellId,4);
-            % pre-mapping staff
-            pbch=obj.preparePbch(pbch);
             
             %throwing out dmrs indexes
             indexes=find(mod(1:1:240,4)~=(nu+1));
@@ -233,8 +222,7 @@ classdef ResourceMapper<handle
             end
             % nu parameter for shift of DM-RS
             nu=cast(mod(NCellId,4),"double");
-            % pre-mapping staff
-            pbchDmRs=obj.preparePbchDmRs(pbchDmRs);
+
             % first 60 PBCH DM-RS
             dmrs=pbchDmRs(1:60);
             
