@@ -196,7 +196,7 @@ classdef ResourceMapper<handle
             nu=mod(NCellId,4);
             
             %throwing out dmrs indexes
-            indexes=find(mod(1:1:240,4)~=(nu+1));
+            indexes=find(mod(1:1:240,4)~=(nu));
             
             % mapping first 180 PBCH
             obj.resourceGrid(indexes+f_offset,1+t_offset)=beta .* pbch(1:180);
