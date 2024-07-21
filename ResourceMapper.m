@@ -196,7 +196,7 @@ classdef ResourceMapper<handle
             nu=mod(NCellId,4);
             
             %throwing out dmrs indexes
-            indexes=find(mod(1:1:240,4)~=(nu));
+            indexes=find(mod(0:1:239,4)~=(nu));
             
             % mapping first 180 PBCH
             obj.resourceGrid(indexes+f_offset,1+t_offset)=beta .* pbch(1:180);
@@ -242,7 +242,7 @@ classdef ResourceMapper<handle
             
             % next dm-rs block (24 elements are splitted into two blocks)
             dmrs=pbchDmRs(62:62+23);
-            indexes=indexes(indexes<46 | indexes>192); % throwing SSS area
+            indexes=[(0:11)*4,(48:59)*4]+nu+1;
             % mapping 3rd part
             obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=beta .* dmrs;
             % d---d---d--…-SSS-…-d---d--d
