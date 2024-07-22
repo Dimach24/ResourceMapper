@@ -14,10 +14,10 @@ classdef ResourceMapper<handle
     methods
         
         function obj=createResourceGrid(obj, ...
-                mu, ...
+                fcase, ...
+                pointA,...
                 frameCount, ...
                 isCycledPrefixExtended, ...
-                scs,...
                 tran_bandwidth)
             % createResourceGrid
             % creates empty Resource grid for this
@@ -25,24 +25,23 @@ classdef ResourceMapper<handle
             % all data in the grid
             arguments
                 obj                     ResourceMapper
-                mu                      (1,1)
-                % subcarrier spacing cofiguration (Δf=2^mu*15 [kHz])
+                fcase                      char
+                % freq. config case letter, see [38.213, 4.1]
+                pointA                  (1,1)
+                % resource grid carrier frequency in GHz
                 frameCount              (1,1)
                 % amounts of empty frames to create
                 isCycledPrefixExtended  (1,1) = false
                 % extended cycled prefix
-                scs = 15;
-                % subcarrier spacing, kHz must be 15, 30 or 60
                 tran_bandwidth (1,1)= 60
                 % transmission bandwidth, MHz see [38.101-1: Table 5.3.2-1]
             end
             R_GRID_CONSTANTS;
-
+            [mu,scs] = obj.caseDecipher(fcase,pointA);
             
-
             NRB_tran_band_seq=MaximumTransmissionBandwidthConfiguration(scs);
             NRB=NRB_tran_band_seq(tran_bandwidth);
-            if(isCycledPrefixExtended) % ONLY FOR MU==2
+            if(isCycledPrefixExtended && (mu==2)) % ONLY FOR MU==2
                 %   12 sym per slot, 10*4 slot per frame = 480 symb per frame
                 obj.resourceGrid=zeros(12*NRB,480*frameCount); % FIXME
             else
@@ -55,15 +54,15 @@ classdef ResourceMapper<handle
         end
         
         %%% ===============================================================
-        function addSsBlockByCase(obj,fcase,n,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset,beta)
+        function addSsBlockByCase(obj,fcase,pointA,nCellId,pssSignal,sssSignal,pbch,pbchDmRs,t_offset,f_offset,beta)
             % addSsBlockByCase
             % places signals according to  [38.213, 4.1]
             arguments
                 obj ResourceMapper
                 fcase char
                 % freq. config case, see [38.213, 4.1]
-                n
-                % array of shifts for this case, see [38.213, 4.1]
+                pointA
+                % resource grid carrier frequency in GHz
                 nCellId
                 % physical layer cell identity; see [38.211,7.4.2.1]
                 pssSignal (1,127)
@@ -81,25 +80,7 @@ classdef ResourceMapper<handle
                 beta (1,4) = [1 1 1 1]
                 % power allocation scaling factor
             end
-            switch fcase
-                case 'A'
-                    shifts=reshape([2 8]+14*n.',1,[]);
-                case 'B'
-                    shifts=reshape([4 8 16 20]+28*n.',1,[]);
-                case 'C'
-                    shifts=reshape([2,8]+14*n.',1,[]);
-                case 'D'
-                    shifts=reshape([8,12,16,20]+28*n.',1,[]);
-                case 'E'
-                    shifts=reshape([(8:4:20),(32:4:44)]+56*n.',1,[]);
-                case 'F'
-                    shifts=reshape([2,9]+14*n.',1,[]);
-                case 'G'
-                    shifts=reshape([2,9]+14*n.',1,[]);
-                otherwise
-                    throw(MException("Freq. Case Error","Case must be uppercase leeter A...G"));
-            end
-            shifts=sort(shifts); % indexing from 1
+            [mu,~,shifts] = obj.caseDecipher(fcase,pointA);
             indexInData=1;
             % for each half-frame
             halfShifts=0:(2*obj.frameCount-1);
@@ -247,6 +228,79 @@ classdef ResourceMapper<handle
             obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=beta .* dmrs;
             % d---d---d--…-SSS-…-d---d--d
         end
+        
+        function [mu, scs, shifts, Lmax_] = caseDecipher(obj, fcase, f_carrier, isSpectrumAccessShared, isSpectrumOperationPaired) 
+        % defines resource grid configuration via case identificator letter  
+            arguments
+                obj ResourceMapper
+                fcase char % freq. config case letter, see [38.213, 4.1]
+                f_carrier (1,1) % carrier frequency in GHz
+                isSpectrumAccessShared logical = 0; % defines shared spectrum channel acces cases
+                isSpectrumOperationPaired logical = 0; % defines paired spectrum operation cases
+            end
+            switch fcase
+                case 'A'
+                    if isSpectrumAccessShared
+                        n = [0 1 2 3 4];
+                        Lmax_ = 10;
+                    else
+                        n = [0 1];
+                        Lmax_ = 4;
+                        if (f_carrier > 3)
+                            n = [0 1 2 3];
+                            Lmax_ = 8;
+                        end
+                    end
+                    shifts=reshape([2 8]+14*n.',1,[]);
+                    mu = 0;
+                case 'B'
+                    n = 0;
+                    Lmax_ = 4;
+                    if f_carrier > 3
+                        n = [0 1];
+                        Lmax_ = 8;
+                    end
+                    shifts=reshape([4 8 16 20]+28*n.',1,[]);
+                    mu = 1;
+                case 'C'
+                    if isSpectrumAccessShared
+                        n = [0 1 2 3 4 5 6 7 8 9];
+                        Lmax_ = 20;
+                    else
+                        n = [0 1];
+                        Lmax_ = 4;
+                        if ((f_carrier > 3)*isSpectrumOperationPaired||(f_carrier >= 1.88)*~isSpectrumOperationPaired)
+                            n = [0 1 2 3];
+                            Lmax_ = 8;
+                        end
+                    end
+                    shifts=reshape([2,8]+14*n.',1,[]);
+                    mu = 1;
+                case 'D'
+                    n = [0 1 2 3 5 6 7 8 10 11 12 13 15 16 17 18];
+                    shifts=reshape([8,12,16,20]+28*n.',1,[]);
+                    mu = 3;
+                    Lmax_ = 64;
+                case 'E'
+                    n = [0 1 2 3 5 6 7 8];
+                    shifts=reshape([(8:4:20),(32:4:44)]+56*n.',1,[]);
+                    mu = 4;
+                    Lmax_ = 64;
+                case 'F'
+                    n = 0:31;
+                    shifts=reshape([2,9]+14*n.',1,[]);
+                    mu = 5;
+                    Lmax_ = 64;
+                case 'G'
+                    n = 0:31;
+                    shifts=reshape([2,9]+14*n.',1,[]);
+                    mu = 6;
+                    Lmax_ = 64;
+                otherwise
+                    throw(MException("Freq. Case Error","Case must be uppercase letter A...G"));
+            end
+            shifts=sort(shifts); % indexing from 1
+            scs = 2^mu * 15;
+        end
     end
-    
 end
