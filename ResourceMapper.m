@@ -158,7 +158,7 @@ classdef ResourceMapper<handle
                 beta (1,1) = 1
                 % power allocation factor
             end
-            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* fft(PssSignal.').';
+            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* PssSignal;
         end
         
         function  addSssToResourceGrid(obj, SssSignal,t_offset,f_offset,beta)
@@ -174,7 +174,7 @@ classdef ResourceMapper<handle
                 beta (1,1) = 1
                 % power allocation factor
             end
-            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* fft(SssSignal.').';
+            obj.resourceGrid((57:183)+f_offset,1+t_offset) = beta .* SssSignal;
         end
         
         function addPbchToResourceGrid(obj,NCellId,pbch,t_offset,f_offset,beta)
