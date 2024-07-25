@@ -210,22 +210,22 @@ classdef ResourceMapper<handle
             dmrs=pbchDmRs(1:60);
             
             % indexes array
-            indexes=find(mod(1:1:240,4)==1);
+            indexes=0:4:236;
             % mapping 1st part
-            obj.resourceGrid(indexes+nu+f_offset,1+t_offset)=beta .* dmrs;
+            obj.resourceGrid(indexes+nu+f_offset+1,1+t_offset)=beta .* dmrs;
             % d---d---d---d … d---d---
             
             % last dm-rs block
             dmrs=pbchDmRs(end-59:end);
             % mapping 2nd part
-            obj.resourceGrid(indexes+nu+f_offset,3+t_offset)=beta .* dmrs;
+            obj.resourceGrid(indexes+nu+f_offset+1,3+t_offset)=beta .* dmrs;
             % d---d---d---d … d---d---
             
             % next dm-rs block (24 elements are splitted into two blocks)
             dmrs=pbchDmRs(62:62+23);
-            indexes=[(0:11)*4,(48:59)*4]+nu+1;
+            indexes=[0:4:44,192:4:236];
             % mapping 3rd part
-            obj.resourceGrid(indexes+nu+f_offset,2+t_offset)=beta .* dmrs;
+            obj.resourceGrid(indexes+nu+f_offset+1,2+t_offset)=beta .* dmrs;
             % d---d---d--…-SSS-…-d---d--d
         end
         
