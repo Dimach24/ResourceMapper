@@ -30,7 +30,7 @@ classdef ResourceMapper<handle
             
             NRB_tran_band_seq=MaximumTransmissionBandwidthConfiguration(scs);
             NRB=NRB_tran_band_seq(channelBandwidth);
-            obj.resourceGrid=zeros(12*NRB,2^obj.mu*140*frameCount); % FIXME
+            obj.resourceGrid=zeros(12*NRB,2^obj.mu*140*frameCount);
             % initializing
             obj.frameCount=frameCount;
         end
